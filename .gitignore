@@ -1,0 +1,9 @@
+gl-code-quality-report.json
+trivy-*.json
+trivy-*.sarif
+semgrep.json
+semgrep.sarif
+gitleaks.json
+to-codequality.py.tmp
+__pycache__/
+.trivycache/
