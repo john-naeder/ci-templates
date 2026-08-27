@@ -253,6 +253,12 @@ report:codequality:
     - job: deps:trivy
       artifacts: true
       optional: true
+    # Thiếu dòng này thì report chạy trước khi deps:dotnet xong, và phát hiện
+    # của nó không bao giờ tới được diff của merge request — job vẫn xanh, chỉ
+    # là kết quả rơi vào hư không.
+    - job: deps:dotnet
+      artifacts: true
+      optional: true
     - job: iac:trivy
       artifacts: true
       optional: true
