@@ -200,12 +200,16 @@ sast:semgrep:
     # "Cannot create auto config when metrics are off" — và vì có `|| true`,
     # job đi tiếp như không có chuyện gì cho tới lúc đọc file không tồn tại.
     # Ruleset khai tường minh thì tải được mà không phải gửi gì về cho họ.
+    # Dấu chấm cuối lệnh là bắt buộc. Không có target tường minh, semgrep
+    # 1.97 thoát rc=2 và không ghi file nào, KHÔNG in ra lý do — chỉ còn lại
+    # thông báo METRICS trông như nguyên nhân mà không phải. Có target thì
+    # chạy bình thường, kể cả khi metrics tắt.
     - |
       semgrep scan --metrics=off --json --output semgrep.json \
-        --config p/security-audit --config p/secrets --config p/ci || true
+        --config p/security-audit --config p/secrets --config p/ci . || true
     - |
       semgrep scan --metrics=off --sarif --output semgrep.sarif \
-        --config p/security-audit --config p/secrets --config p/ci || true
+        --config p/security-audit --config p/secrets --config p/ci . || true
     - |
       python3 - <<'PY'
       import json, os, sys
