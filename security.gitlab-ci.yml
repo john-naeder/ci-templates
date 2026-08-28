@@ -195,11 +195,25 @@ sast:semgrep:
   variables:
     SEMGREP_SEND_METRICS: 'off'
   script:
-    - semgrep scan --config auto --metrics=off --json --output semgrep.json || true
-    - semgrep scan --config auto --metrics=off --sarif --output semgrep.sarif || true
+    # KHÔNG dùng --config auto: nó để server semgrep.dev chọn rule dựa trên
+    # telemetry, nên nó từ chối chạy khi --metrics=off với đúng câu
+    # "Cannot create auto config when metrics are off" — và vì có `|| true`,
+    # job đi tiếp như không có chuyện gì cho tới lúc đọc file không tồn tại.
+    # Ruleset khai tường minh thì tải được mà không phải gửi gì về cho họ.
+    - |
+      semgrep scan --metrics=off --json --output semgrep.json \
+        --config p/security-audit --config p/secrets --config p/ci || true
+    - |
+      semgrep scan --metrics=off --sarif --output semgrep.sarif \
+        --config p/security-audit --config p/secrets --config p/ci || true
     - |
       python3 - <<'PY'
-      import json
+      import json, os, sys
+      # `|| true` ở trên nuốt mọi lỗi của semgrep, nên phải tự kiểm tra:
+      # thiếu file nghĩa là scan không chạy, không phải "không có phát hiện".
+      if not os.path.exists("semgrep.json"):
+          sys.exit("semgrep không tạo ra semgrep.json — xem log phía trên, "
+                   "quá trình quét đã không chạy chứ không phải sạch")
       d = json.load(open("semgrep.json"))
       rs = d.get("results", [])
       errs = [r for r in rs if r.get("extra", {}).get("severity") == "ERROR"]
